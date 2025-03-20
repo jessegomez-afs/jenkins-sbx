@@ -1,32 +1,45 @@
+#!/usr/bin/env groovy
 pipeline {
     agent any
+    
     environment {
-        TERRAFORM_HOME = 'C:\\Users\\jgome\\bin'
-        PROJECT_HOME = 'C:\\Users\\jgome\\jenkins-sbx' 
-
+        AWS_DEFAULT_REGION = "us-east-1"
+    }
+    
     stages {
-        stage('Terraform Init') {
+        stage('Install AWS CLI') {
             steps {
-                script {
-                    def tfInit = "cd ${PROJECT_HOME} && ${TERRAFORM_HOME}\\terraform init"
-                    bat tfInit
-                }
+                sh 'apt-get update'
+                sh 'apt-get -y install awscli'
             }
         }
-        stage('Terraform Plan') {
+        
+        stage('Launch EC2 Instance and Deploy Web App') {
             steps {
-                script {
-                    def tfPlan = "cd ${PROJECT_HOME} && ${TERRAFORM_HOME}\\terraform plan"
-                    bat tfPlan
-                }
-            }
-        }
-
-        stage('Terraform Apply') {
-            steps {
-                script {
-                    def tfApply = "cd ${PROJECT_HOME} && ${TERRAFORM_HOME}\\terraform apply -auto-approve"
-                    bat tfApply
+                withCredentials([[
+                    // Binding AWS credentials
+                    $class: 'AmazonWebServicesCredentialsBinding',
+                    accessKeyVariable: 'AWS_ACCESS_KEY_ID',
+                    credentialsId: 'aws-cred-manasa',
+                    secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'
+                ]])
+                {
+                    script {
+                        
+                        // Launches EC2 instance along with a user data script
+                        def instance_id = sh(script: '''
+                            aws ec2 run-instances \
+                            --image-id ami-08b5b3a93ed654d19 \
+                            --instance-type t2.micro \
+                            --query Instances[0].InstanceId \
+                            --output text
+                        ''', returnStdout: true).trim()
+                        
+                        echo "Launched instance is: $instance_id"
+                        
+                        echo "Launched and Deployed successfully..."
+                        
+                    }
                 }
             }
         }
