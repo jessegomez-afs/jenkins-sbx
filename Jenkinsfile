@@ -22,37 +22,13 @@ pipeline {
                     passphraseVariable: '',
                 ]]) {
                     script {
-                        
                         // Launches an EC2 instance
-                        def instance_id = sh(script: '''
-                            aws ec2 run-instances \
-                            --image-id ami-08b5b3a93ed654d19 \
-                            --instance-type t2.micro \
-                            --key-name mykeypair \
-                            --query Instances[0].InstanceId \
-                            --output text
-                        ''', returnStdout: true).trim()
-
-                        echo "Launched instance is: $instance_id"
+                        sh "aws.exe ec2 run-instances --image-id ami-08b5b3a93ed654d19  --instance-type t2.micro  --query Instances[0].InstanceId  --output text"
                         
                         // Wait for the instance to be in running state
                         sh "aws ec2 wait instance-status-ok --instance-ids ${instance_id}"
                         
                         echo "Wait completed"
-                        
-                        // Gets the public IP of the launched instance
-                        def public_ip
-                        script {
-                            public_ip = sh(script: '''
-                                aws ec2 describe-instances \
-                                --instance-ids ''' + instance_id + '''  \
-                                --query 'Reservations[0].Instances[0].[PublicIpAddress]' \
-                                --output text
-                            ''', returnStdout: true).trim()
-                        }
-                        
-                        echo "EC2 instance launched with Instance ID: $instance_id and Public IP: $public_ip"
-                        
                     }
                 }
             }
