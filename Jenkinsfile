@@ -7,13 +7,6 @@ pipeline {
     }
     
     stages {
-        stage('Install AWS CLI') {
-            steps {
-                sh 'apt-get update'
-                sh 'apt-get -y install awscli'
-            }
-        }
-        
         stage('Launch EC2 Instance and Deploy Web App') {
             steps {
                 withCredentials([[
