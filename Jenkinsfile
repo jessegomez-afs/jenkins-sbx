@@ -11,7 +11,6 @@ pipeline {
             steps {
                 withCredentials([[
                     // Binding AWS credentials
-                    # $class: 'AmazonWebServicesCredentialsBinding',
                     accessKeyVariable: 'AWS_ACCESS_KEY_ID',
                     credentialsId: 'aws-cred-manasa',
                     secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'
